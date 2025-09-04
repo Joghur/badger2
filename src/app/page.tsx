@@ -9,6 +9,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { readDir } from "@tauri-apps/plugin-fs";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import * as exifr from "exifr";
+import { joinSafe } from "@/lib/utils";
 
 async function readExifFromPath(path: string) {
   const url = convertFileSrc(path);
@@ -34,7 +35,8 @@ function flatten(entries: DirEntry[], parent: string) {
   }));
   while (stack.length) {
     const { e, parent } = stack.pop()!;
-    const full = e.name ? `${parent}/${e.name}` : parent;
+    const name: string | undefined = e.name;
+    const full = name ? joinSafe(parent, name) : parent;
     out.push({
       name: e.name ?? full.split("/").at(-1) ?? full,
       path: full,

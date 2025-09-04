@@ -19,12 +19,18 @@ if (typeof window !== "undefined") {
 }
 
 export async function readExifFromPath(path: string) {
-  const url = convertFileSrc(path); // webview-safe URL
-  const res = await fetch(url); // hent filen via asset protocol
-  const buf = await res.arrayBuffer(); // ArrayBuffer til exifr
+  const url = convertFileSrc(path);
+  const res = await fetch(url);
+  const buf = await res.arrayBuffer();
   try {
-    return await exifr.parse(buf); // parse EXIF uden Node fs/zlib
+    return await exifr.parse(buf);
   } catch {
     return null;
   }
 }
+
+export const joinSafe = (parent: string, name: string) => {
+  // vælg separator ud fra parent (Windows har '\')
+  const sep = parent.includes("\\") ? "\\" : "/";
+  return parent.endsWith(sep) ? `${parent}${name}` : `${parent}${sep}${name}`;
+};
