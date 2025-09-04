@@ -22,19 +22,7 @@ async function readExifFromPath(path: string) {
 }
 
 type DirEntry = Awaited<ReturnType<typeof readDir>>[number];
-const IMAGE_EXT = new Set([
-  "jpg",
-  "jpeg",
-  "png",
-  "gif",
-  "webp",
-  "bmp",
-  "tiff",
-  "avif",
-  "heic",
-  "heif",
-  "svg",
-]);
+const IMAGE_EXT = new Set(["jpg", "jpeg", "png", "webp"]);
 const isImage = (n: string) =>
   IMAGE_EXT.has(n.split(".").pop()?.toLowerCase() ?? "");
 
@@ -46,14 +34,15 @@ function flatten(entries: DirEntry[], parent: string) {
   }));
   while (stack.length) {
     const { e, parent } = stack.pop()!;
-    const full = e.path ?? (e.name ? `${parent}/${e.name}` : parent);
+    const full = e.name ? `${parent}/${e.name}` : parent;
     out.push({
       name: e.name ?? full.split("/").at(-1) ?? full,
       path: full,
       isDirectory: !!e.isDirectory,
     });
-    if (e.children)
+    if ("children" in e && Array.isArray(e.children)) {
       for (const c of e.children) stack.push({ e: c, parent: full });
+    }
   }
   return out;
 }
@@ -67,7 +56,7 @@ export default function Page() {
 
   const loadFolder = useCallback(async (path: string) => {
     setFolder(path);
-    const entries = await readDir(path, { recursive: false });
+    const entries = await readDir(path);
     const flat = flatten(entries, path);
     const imgs = flat
       .filter((f) => !f.isDirectory && (isImage(f.name) || isImage(f.path)))
