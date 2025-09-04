@@ -7,13 +7,12 @@ import {
   MenubarTrigger,
   MenubarContent,
   MenubarItem,
-  MenubarSeparator,
 } from "@/components/ui/menubar";
 import { Button } from "@/components/ui/button";
 import Shortcut from "@/components/ShortCut";
 import { useKeyPress } from "@/hooks/useKeypress";
 
-const AppMenu = () => {
+const AppMenu = ({ onOpenFolder }: { onOpenFolder: () => void }) => {
   const handleCtrlN = (event: React.KeyboardEvent | React.MouseEvent) => {
     event.preventDefault();
     console.log("handleCtrlN");
@@ -21,10 +20,7 @@ const AppMenu = () => {
   const handleCtrlO = (event: React.KeyboardEvent | React.MouseEvent) => {
     event.preventDefault();
     console.log("handleCtrlO");
-  };
-  const handleCtrlS = (event: React.KeyboardEvent | React.MouseEvent) => {
-    event.preventDefault();
-    console.log("handleCtrlS");
+    onOpenFolder();
   };
   const handleAltF4 = (event: React.KeyboardEvent | React.MouseEvent) => {
     event.preventDefault();
@@ -33,7 +29,6 @@ const AppMenu = () => {
 
   const handler = useKeyPress<HTMLElement>({
     n: [(event) => handleCtrlN(event), ["Control"]],
-    s: [(event) => handleCtrlS(event), ["Control"]],
     o: [(event) => handleCtrlO(event), ["Control"]],
   });
 
@@ -45,15 +40,11 @@ const AppMenu = () => {
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
-      <div className="mx-auto max-w-6xl px-6 py-3">
-        <Menubar className="rounded-xl border bg-card/90 p-2 shadow-sm text-base">
+      <div className="mx-auto max-w-6xl">
+        <Menubar className="rounded-xl border bg-card/90 shadow-sm text-base">
           <MenubarMenu>
             <MenubarTrigger asChild>
-              <Button
-                variant="secondary"
-                size="lg"
-                className="h-12 px-6 text-lg"
-              >
+              <Button variant="secondary" size="sm" className="h-12 text-lg">
                 Filer
               </Button>
             </MenubarTrigger>
@@ -66,34 +57,10 @@ const AppMenu = () => {
                   <Button
                     variant="outline"
                     size="lg"
-                    onClick={handleCtrlN}
-                    className="!flex w-full justify-between"
-                  >
-                    Ny <Shortcut keys="- (CTRL+N)" />
-                  </Button>
-                </MenubarItem>
-
-                <MenubarItem>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={handleCtrlO}
+                    onClick={onOpenFolder}
                     className="!flex w-full justify-between"
                   >
                     Åbn <Shortcut keys="- (CTRL+O)" />
-                  </Button>
-                </MenubarItem>
-
-                <div className="my-1 h-px bg-border" />
-
-                <MenubarItem>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={handleCtrlS}
-                    className="!flex w-full justify-between"
-                  >
-                    Gem <Shortcut keys="- (CTRL+S)" />
                   </Button>
                 </MenubarItem>
 
@@ -134,15 +101,6 @@ const AppMenu = () => {
                   className="h-11 w-full justify-start"
                 >
                   Om programmet
-                </Button>
-              </MenubarItem>
-              <MenubarItem>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="h-11 w-full justify-start"
-                >
-                  Licens
                 </Button>
               </MenubarItem>
               <MenubarItem>
