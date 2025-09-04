@@ -10,6 +10,7 @@ const validKeys = [
   "Enter",
   "Escape",
   "F2",
+  "F4",
   "o",
   "m",
   "s",
