@@ -19,10 +19,7 @@ export default function ImageList({
   }
 
   return (
-    <div
-      className="grid gap-3"
-      style={{ gridTemplateColumns: "repeat(3, 1fr)" }}
-    >
+    <div className="grid gap-3 h-auto overflow-y-auto border rounded-lg p-4">
       {images.map((p) => {
         const name = p.split("/").at(-1) ?? p;
         const active = selected === p;

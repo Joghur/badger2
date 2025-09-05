@@ -34,3 +34,5 @@ export const joinSafe = (parent: string, name: string) => {
   const sep = parent.includes("\\") ? "\\" : "/";
   return parent.endsWith(sep) ? `${parent}${name}` : `${parent}${sep}${name}`;
 };
+
+export const lastName = (p: string): string => p.split(/[/\\]/).pop() ?? p;

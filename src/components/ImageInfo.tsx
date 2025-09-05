@@ -49,12 +49,12 @@ export default function ImageInfo({
   }
 
   return (
-    <div className="flex h-full flex-col gap-4">
+    <div className="flex h-64 flex-col gap-4 mb-9">
       <div className="rounded-lg border bg-card p-4">
         <h2 className="mb-3 text-lg font-semibold">EXIF</h2>
         {rows.length ? (
           <div className="max-h-[40vh] overflow-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-lg">
               <tbody>
                 {rows.map(([k, v]) => (
                   <tr key={k} className="border-b last:border-b-0">

@@ -7,29 +7,39 @@ import {
   MenubarTrigger,
   MenubarContent,
   MenubarItem,
+  MenubarSeparator,
 } from "@/components/ui/menubar";
 import { Button } from "@/components/ui/button";
 import Shortcut from "@/components/ShortCut";
 import { useKeyPress } from "@/hooks/useKeypress";
+import { exit } from "@tauri-apps/plugin-process";
 
-const AppMenu = ({ onOpenFolder }: { onOpenFolder: () => void }) => {
-  const handleCtrlN = (event: React.KeyboardEvent | React.MouseEvent) => {
-    event.preventDefault();
-    console.log("handleCtrlN");
-  };
+const AppMenu = ({
+  onOpenFolder,
+  onCreateWorkFolder,
+  canCreateWork,
+}: {
+  onOpenFolder: () => void;
+  onCreateWorkFolder: () => void;
+  canCreateWork?: boolean;
+}) => {
   const handleCtrlO = (event: React.KeyboardEvent | React.MouseEvent) => {
     event.preventDefault();
     console.log("handleCtrlO");
     onOpenFolder();
   };
-  const handleAltF4 = (event: React.KeyboardEvent | React.MouseEvent) => {
+  const handleAltF4 = async (event: React.KeyboardEvent | React.MouseEvent) => {
     event.preventDefault();
-    console.log("handleAltF4");
+    try {
+      await exit(0);
+    } catch (err) {
+      console.error("Kunne ikke afslutte:", err);
+    }
   };
 
   const handler = useKeyPress<HTMLElement>({
-    n: [(event) => handleCtrlN(event), ["Control"]],
     o: [(event) => handleCtrlO(event), ["Control"]],
+    F4: [(event) => handleAltF4(event), ["Alt"]], // Obsolete as system takes over
   });
 
   useEffect(() => {
@@ -44,50 +54,8 @@ const AppMenu = ({ onOpenFolder }: { onOpenFolder: () => void }) => {
         <Menubar className="rounded-xl border bg-card/90 shadow-sm text-base">
           <MenubarMenu>
             <MenubarTrigger asChild>
-              <Button variant="secondary" size="sm" className="h-12 text-lg">
+              <Button variant="ghost" size="sm" className="h-12 text-xl">
                 Filer
-              </Button>
-            </MenubarTrigger>
-            <MenubarContent
-              align="start"
-              className="z-50 w-[36rem] p-3 text-base"
-            >
-              <div className="w-[36rem] max-w-none flex flex-col gap-2">
-                <MenubarItem>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={onOpenFolder}
-                    className="!flex w-full justify-between"
-                  >
-                    Åbn <Shortcut keys="- (CTRL+O)" />
-                  </Button>
-                </MenubarItem>
-
-                <div className="my-1 h-px bg-border" />
-
-                <MenubarItem>
-                  <Button
-                    variant="destructive"
-                    size="lg"
-                    onClick={handleAltF4}
-                    className="!flex w-full justify-between"
-                  >
-                    Afslut <Shortcut keys="Alt+F4" />
-                  </Button>
-                </MenubarItem>
-              </div>
-            </MenubarContent>
-          </MenubarMenu>
-
-          <MenubarMenu>
-            <MenubarTrigger asChild>
-              <Button
-                variant="secondary"
-                size="lg"
-                className="inline-flex items-center justify-center px-4 py-2 text-base"
-              >
-                Om
               </Button>
             </MenubarTrigger>
             <MenubarContent
@@ -96,18 +64,63 @@ const AppMenu = ({ onOpenFolder }: { onOpenFolder: () => void }) => {
             >
               <MenubarItem>
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="lg"
-                  className="h-11 w-full justify-start"
+                  onClick={onOpenFolder}
+                  className="flex w-full justify-between text-xl"
+                >
+                  Åbn <Shortcut keys="ctrl+o" />
+                </Button>
+              </MenubarItem>
+
+              <MenubarItem>
+                <Button
+                  variant="ghost"
+                  size="lg"
+                  onClick={onCreateWorkFolder}
+                  disabled={!canCreateWork}
+                  className="flex w-full justify-between text-xl"
+                >
+                  Opret arbejdsmappe
+                </Button>
+              </MenubarItem>
+
+              <MenubarSeparator className="my-2" />
+
+              <MenubarItem>
+                <Button
+                  variant="destructive"
+                  size="lg"
+                  onClick={handleAltF4}
+                  className="flex w-full justify-between text-xl"
+                >
+                  Afslut <Shortcut keys="alt+F4" />
+                </Button>
+              </MenubarItem>
+            </MenubarContent>
+          </MenubarMenu>
+
+          <MenubarMenu>
+            <MenubarTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-12 text-xl">
+                Om
+              </Button>
+            </MenubarTrigger>
+            <MenubarContent align="start" className="z-50 min-w-64 p-3">
+              <MenubarItem>
+                <Button
+                  variant="ghost"
+                  size="lg"
+                  className="h-11 w-full justify-start text-xl"
                 >
                   Om programmet
                 </Button>
               </MenubarItem>
               <MenubarItem>
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="lg"
-                  className="h-11 w-full justify-start"
+                  className="h-11 w-full justify-start text-xl"
                 >
                   Hjælp
                 </Button>

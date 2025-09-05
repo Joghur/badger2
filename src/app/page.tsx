@@ -6,10 +6,17 @@ import AppMenu from "@/components/AppMenu";
 import ImageList from "@/components/ImageList";
 import ImageInfo from "@/components/ImageInfo";
 import { open } from "@tauri-apps/plugin-dialog";
-import { readDir } from "@tauri-apps/plugin-fs";
+import {
+  readDir,
+  mkdir,
+  exists,
+  copyFile,
+  readFile,
+  writeFile,
+} from "@tauri-apps/plugin-fs";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import * as exifr from "exifr";
-import { joinSafe } from "@/lib/utils";
+import { joinSafe, lastName } from "@/lib/utils";
 
 async function readExifFromPath(path: string) {
   const url = convertFileSrc(path);
@@ -56,6 +63,69 @@ export default function Page() {
   const [exif, setExif] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const createWorkFolderAndCopy = useCallback(async () => {
+    if (!folder || images.length === 0) {
+      alert("Ingen mappe eller ingen viste billeder.");
+      return;
+    }
+
+    // Navn på arbejdsmappe (subfolder i den valgte mappe)
+    const WORK_SUBDIR = "_badger_work";
+    const workDir = joinSafe(folder, WORK_SUBDIR);
+
+    try {
+      await mkdir(workDir, { recursive: true });
+    } catch (e) {
+      console.error("Kunne ikke oprette arbejdsmappe:", e);
+      alert("Kunne ikke oprette arbejdsmappe.");
+      return;
+    }
+
+    let copied = 0,
+      skipped = 0,
+      errors = 0;
+    const destPaths: string[] = [];
+
+    for (const src of images) {
+      const dest = joinSafe(workDir, lastName(src));
+      try {
+        if (await exists(dest)) {
+          skipped++;
+          destPaths.push(dest);
+          continue;
+        }
+
+        // hurtigst: copyFile – hvis den fejler i din version, falder vi tilbage til read+write
+        try {
+          await copyFile(src, dest);
+        } catch {
+          const data = await readFile(src);
+          await writeFile(dest, data);
+        }
+
+        copied++;
+        destPaths.push(dest);
+      } catch (e) {
+        console.error("Kopi-fejl for", src, e);
+        errors++;
+      }
+    }
+
+    // Skift visningen til arbejds-mappen, så vi arbejder på kopierne
+    if (destPaths.length > 0) {
+      setFolder(workDir);
+      setImages(destPaths);
+      setSelected(destPaths[0] ?? null);
+      setExif(
+        destPaths[0] ? (await readExifFromPath(destPaths[0])) ?? null : null
+      );
+    }
+
+    alert(
+      `Arbejdsmappe: ${workDir}\nKopieret: ${copied}\nAllerede fandtes: ${skipped}\nFejl: ${errors}`
+    );
+  }, [folder, images, joinSafe]);
+
   const loadFolder = useCallback(async (path: string) => {
     setFolder(path);
     const entries = await readDir(path);
@@ -96,25 +166,20 @@ export default function Page() {
 
   return (
     <>
-      <AppMenu onOpenFolder={openFolder} />
+      <AppMenu
+        onOpenFolder={openFolder}
+        onCreateWorkFolder={createWorkFolderAndCopy}
+        canCreateWork={!!folder && images.length > 0}
+      />
 
       <main className="mx-auto mt-6 max-w-[1600px] px-6">
-        <div className="flex gap-4" style={{ minHeight: "calc(100vh - 9rem)" }}>
-          <aside
-            className="border-r bg-card p-3"
-            style={{
-              width: 460, // hård bredde
-              flexShrink: 0, // må ikke kollapse
-              overflow: "hidden",
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
+        <div className="flex gap-4">
+          <aside className="border-r bg-card p-3">
             <div className="mb-2 truncate text-xs text-muted-foreground">
               {folder ?? "Ingen mappe valgt"}
             </div>
 
-            <div style={{ overflow: "auto", maxHeight: "100%" }}>
+            <div>
               {loading ? (
                 <div className="p-4 text-sm text-muted-foreground">Loader…</div>
               ) : (
@@ -127,11 +192,8 @@ export default function Page() {
             </div>
           </aside>
 
-          <section
-            className="min-w-0 flex-1 grid gap-4"
-            style={{ gridTemplateRows: "auto 1fr" }}
-          >
-            <div className="flex h-[60vh] items-center justify-center rounded-lg border bg-background p-4">
+          <section className="flex flex-col items-center justify-center min-w-0 flex-1 gap-4">
+            <div className="w-auto h-[500px] rounded-lg border bg-background p-4">
               {selected && (
                 <img
                   src={convertFileSrc(selected)}
@@ -142,9 +204,7 @@ export default function Page() {
               )}
             </div>
 
-            <div className="min-h-[280px]">
-              <ImageInfo path={selected} exif={exif} />
-            </div>
+            <ImageInfo path={selected} exif={exif} />
           </section>
         </div>
       </main>
