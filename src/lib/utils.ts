@@ -36,3 +36,24 @@ export const joinSafe = (parent: string, name: string) => {
 };
 
 export const lastName = (p: string): string => p.split(/[/\\]/).pop() ?? p;
+
+export const dirOf = (p: string) => p.replace(/[\\/][^\\/]+$/, "");
+
+// sanitizér brugerens basis-navn til filsystem
+export const slug = (s: string) =>
+  s
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^A-Za-z0-9._-]+/g, "") || "untitled";
+
+export const fmtTs = (d: Date, useDayMonth = true) => {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  const mm = pad(d.getMonth() + 1);
+  const dd = pad(d.getDate());
+  const HH = pad(d.getHours());
+  const MM = pad(d.getMinutes());
+  const SS = pad(d.getSeconds());
+  const date = useDayMonth ? `${yyyy}-${dd}-${mm}` : `${yyyy}-${mm}-${dd}`;
+  return `${date}_${HH}-${MM}-${SS}`; // minus-tegn i tiden for Windows
+};

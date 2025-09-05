@@ -8,6 +8,8 @@
     "dialog:default",
     "fs:default",
     "process:default",
+    "fs:write-files",
+    "fs:allow-rename",
     {
       "identifier": "fs:scope",
       "allow": [{ "path": "$HOME/**/*" }]
